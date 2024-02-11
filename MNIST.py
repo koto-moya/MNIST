@@ -81,6 +81,7 @@ def main():
                 param.grad = None
         if loss < 1.5:
             break
+        
         acc = torch.stack([batch_accuracy(softmax(model(x)), y) for x,y in validation]).mean()
 
         message = f"\rLoss: {loss:.4f} | model accuracy: {acc*100:.0f}%"    
