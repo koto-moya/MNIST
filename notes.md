@@ -15,7 +15,7 @@ Can't use `tensor` as a variable name
 
 ## Benchmarking
 
-Whenever desinging a model you should first create a benchmark through tradtional means with which you can compare your model to.
+Whenever designing a model you should first create a benchmark through traditional means with which you can compare your model to.
 
 In the case of MNIST we simply gather the average of the numbers in question.  These look like
 
@@ -27,9 +27,9 @@ Our benchmark is 95%
 
 ## Broadcasting
 
-Pytorch uses *broadcasting* to do operation with tensors of different sizes.  It will expand the tensor with the smaller rank to match the the tensor with the larger rank without actually allocating extra memory. 
+PyTorch uses *broadcasting* to do operation with tensors of different sizes.  It will expand the tensor with the smaller rank to match the the tensor with the larger rank without actually allocating extra memory. 
 
-*This is the most impoprtant technique for making efficient python code*
+*This is the most important technique for making efficient python code*
 
 ## Python Note
 
@@ -54,11 +54,11 @@ Using a Linear1 operation (mat mul the weights to the training data using @ oper
 
 ### Step 3: Calculate the Loss
 
-This is a little tricky here since our loss fucntion is essentialy a step function.  
+This is a little tricky here since our loss function is essentially a step function.  
 
 ![Accuracy Step Function](Accuracy_step.png)
 
-The gradient of Accuracy (A) will be like $ \nabla A = 0$ where $\{x: x < 0.5, x > 0.5 \}$ and $ \nabla A = \infty $ where $\{x: x = 0.5 \}$
+The gradient of Accuracy (A) will be like $\nabla A = 0 \; \text{where} \; \{x: x < 0.5, x > 0.5 \}\; \text{and} \; \nabla A = \infty \; \text{where} \; \{x: x = 0.5 \}$
 
 Sort of making up my own notation here, lets see if I keep it consistent.  I am operating under the assumption that we are dealing with tensors here.  
 
@@ -78,7 +78,7 @@ So the predictions get squashed between 0 and 1
 
 Then taking the squashed predictions I pass them into the `.where` in the following way: `torch.where(trgt==1, 1-prds, prds)`. So if the target value is 1 (in this case would denote a 3) return the difference between 1 and the prediction.  The closer to 0 the better the prediction.  If the target does not equal 0 then return the prediction,which should already be closer to 0. 
 
-Then take the mean of these valsue and you will have your mean loss
+Then take the mean of these value and you will have your mean loss
 
 #### Note: On metrics and loss
 
@@ -216,17 +216,17 @@ We will be using the Cross entropy loss function for multi-class classification
 
 Binary Cross Entropy
 
-$\begin{align}
+$$\begin{align}
 L_{i} = -\log_{}(p_{i}) + (1-y_{i})\log_{}(1-p_{i})\\ 
 \text{where} \; p = \text{predicted value}, \\
 \text{i} = \text{i-th sample}, \\
 \text{and} \; y = \text{target value} \\
-\end{align}$
+\end{align}$$
 
-$\begin{align}
+$$\begin{align}
 \therefore \text{Binary Model Loss} = \sum_{i=0}^{N} L_{i} \\
 \text{where} \; N = \text{number of samples} \\
-\end{align}$
+\end{align}$$
 
 Took sometime to figure but I eventually got the Multi-category Cross Entropy function all setup.   
 
@@ -234,31 +234,31 @@ Took sometime to figure but I eventually got the Multi-category Cross Entropy fu
 
 This loss is the combination of two functions: Softmax, and Cross entropy loss. Softmax is described as 
 
-$\begin{align}
+$$\begin{align}
 \text{softmax}(p_{i}) = \frac{e^{p_{i}}}{\sum_{c=1}^{C} e^{p_{c}}}\\ 
 \text{where} \; p = \text{predicted value}, \\
 \text{i} = \text{i-th sample}, \\ 
 \text{c} = \text{label index}, \\
 \text{C} = \text{number of label labels} \\
-\end{align}$
+\end{align}$$
 
 And Categorical Cross-Entropy is described as 
 
-$\begin{align}
+$$\begin{align}
 L_{i} = -\sum_{c=0}^{C}y_{i,c}\log_{}(p_{i,c})\\ 
 \text{where} \; p = \text{predicted value}, \\
 \text{y} = \text{target value}, \\
 \text{i} = \text{i-th sample}, \\ 
 \text{c} = \text{label index}, \\
 \text{C} = \text{number of labels} \\
-\end{align}$
+\end{align}$$
 
 
 
-$\begin{align}
+$$\begin{align}
 \therefore \text{ Multi-Category Model Loss} = \frac{-1}{N}\sum_{i=0}^{N}\sum_{c=0}^{C}y_{i,c}\log_{}(\text{softmax}(p_{i,c})) \\
 \text{where} \; N = \text{number of samples} \\
-\end{align}$
+\end{align}$$
 
 The inclusion of softmax is to insure no nan/infinite values I'm assuming.  
 
@@ -284,28 +284,28 @@ print(one_hot_predictions)
 
 This reduces our Categorical Cross Entropy to 
 
-$\begin{align}
+$$\begin{align}
 L_{i} = -\log_{}(p_{i,k}) \\
 \text{where} \; k = \text{index of target class}, \\ 
 \text{and} \; i = \text{i-th sample}, \\ 
-\text{and} \; p \; \text{is the soft maxxed prediction}
-\end{align}$
+\text{and} \; p \; \text{is the soft maxed prediction}
+\end{align}$$
 
 
-$\begin{align}
+$$\begin{align}
 \therefore  \text{ Multi-Category Model Loss} = \sum_{i=0}^{N}L_{i} \\
 \text{where} \; N = \text{number of samples} \\
-\end{align}$
+\end{align}$$
 
 
-Yes, I index from zero. fight me. Also, I dropped the normalization factor as all the implementations I saw didn't use it.  In practice, N will be the batch size.  After implementing the loss function I ran into an issue with the loss dropping to nan immediately after the first batch.  I (not so quickly) realized that my learning rate was set to 1, which was causing the model to diverge.  Fixing that resulted in a working MNIST digit classifier.  This was easier than I expected, however I am definitely looking forward to using some of the more refined tools Pytorch offers.
+Yes, I index from zero. fight me. Also, I dropped the normalization factor as all the implementations I saw didn't use it.  In practice, N will be the batch size.  After implementing the loss function I ran into an issue with the loss dropping to nan immediately after the first batch.  I (not so quickly) realized that my learning rate was set to 1, which was causing the model to diverge.  Fixing that resulted in a working MNIST digit classifier.  This was easier than I expected, however I am definitely looking forward to using some of the more refined tools PyTorch offers.
 
 
 ## !!! Forgot to benchmark the Multi-class model !!!
 
-I've been pretty bummed about the performace of the multi didgit model.  then I realized I was comparing the performance (accuracy) to the binary model!  Need to create a benchmark to compare against.  
+I've been pretty bummed about the performance of the multi digit model.  then I realized I was comparing the performance (accuracy) to the binary model!  Need to create a benchmark to compare against.  
 
-Creating the benchmark flow toook too long.  Once I was done I asked GPT to refactor using broadcasting and it turned by 20 plus lines into 10 by Broadcasting.  It's obvious that I need to have a better grasp on broadcasting.
+Creating the benchmark flow took too long.  Once I was done I asked GPT to refactor using broadcasting and it turned by 20 plus lines into 10 by Broadcasting.  It's obvious that I need to have a better grasp on broadcasting.
 
 The benchmark returned an accuracy of 66%.  My model performs at ~95% accuracy which is a significant improvement.  And here I can finally end this project. 
 
