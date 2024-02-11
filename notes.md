@@ -192,7 +192,7 @@ Right now what I have is a binary classifier.  I need to update the model to tak
 To do this I need to:
 
 - Change the way I am loading the data
-    - change the labels form 0 and 1 to $(0,9)$
+    - change the labels form 0 and 1 to $[0,9]$
 
 - Change the loss function to support 2+ predictions
 - Change the accuracy function to handle the new prediction space
@@ -203,7 +203,7 @@ Well, after a nice side quest finding the MNIST data, we can get started. I deci
 We will be using the Cross entropy loss function for multi-class classification
 
 - First I will implement the binary formulation, then try the multi-class
-- trying it on the Bianary classifier
+- trying it on the Binary classifier
 - Implemented BCELoss from scratch but ran into numerical instability with torch.log()
     - Get nan values often which screws things up
     - This was from $log(0) = \infty$
@@ -230,7 +230,7 @@ $$\begin{align}
 
 Took sometime to figure but I eventually got the Multi-category Cross Entropy function all setup.   
 
-#### Note: on Categorcial Cross Entropy Loss
+#### Note: on Categorical Cross Entropy Loss
 
 This loss is the combination of two functions: Softmax, and Cross entropy loss. Softmax is described as 
 
@@ -260,7 +260,7 @@ $$\begin{align}
 \text{where} \; N = \text{number of samples} \\
 \end{align}$$
 
-The inclusion of softmax is to insure no nan/infinite values I'm assuming.  
+The inclusion of Softmax is to ensure no nan/infinite values I'm assuming.  
 
 The practical implementation is further simplified by employing the one_hot tensor method.  This method is used to select only the prediction of the target value.  For example,
 
