@@ -19,7 +19,7 @@ Whenever designing a model you should first create a benchmark through tradition
 
 In the case of MNIST we simply gather the average of the numbers in question.  These look like
 
-![Mean 3](mean3.png)
+![Mean 3](images/mean3.png)
 
 The distance of any given number from its corresponding mean image is the benchmark.
 
@@ -56,7 +56,7 @@ Using a Linear1 operation (mat mul the weights to the training data using @ oper
 
 This is a little tricky here since our loss function is essentially a step function.  
 
-![Accuracy Step Function](Accuracy_step.png)
+![Accuracy Step Function](images/Accuracy_step.png)
 
 The gradient of Accuracy (A) will be like $\nabla A = 0 \; \text{where} \; \{x: x < 0.5, x > 0.5 \}\; \text{and} \; \nabla A = \infty \; \text{where} \; \{x: x = 0.5 \}$
 
@@ -70,7 +70,7 @@ We use torch.where to achieve this (works just like np.where but speedy).  Becau
 
 sigmoid: $\frac{1}{1+e^{-x}}$
 
-![sigmoid](sigmoid.png)
+![sigmoid](images/sigmoid.png)
 
 The gradient of a sigmoid will always be on the interval $(0,\infty)$
 
@@ -90,7 +90,7 @@ I wonder if it would be useful to devise metrics that closely resemble the loss 
 
 #### Note: SGD and Mini-batches
 
-We obviously want good performance during training which means thinking about speed.  We can't use the entire dataset everytime we train, it would take too long.  We also can't update one weight at a time, this is imprecise as we would be using limited information causing the gradient to be unstable.  You could imagine some data points having extreme gradients, but get averaged out when grouped with other data points. 
+We obviously want good performance during training which means thinking about speed.  We can't use the entire dataset every time we train, it would take too long.  We also can't update one weight at a time, this is imprecise as we would be using limited information causing the gradient to be unstable.  You could imagine some data points having extreme gradients, but get averaged out when grouped with other data points. 
 
 What do we do? We compromise. We create mini-batches based on a *batch size* we determine before training.  The *batch size* determines the number of data points are used per *epoch*
 
@@ -122,7 +122,7 @@ Stop
 My understanding of Python classes is poor.  My intuition is still based on static methods.  This led me to writing dependent definitions and repeating myself often.  I used GPT to help me form the class and I am getting a better handle on the intuition.  Also used GPT to write a short course on Python classes to help out.  
 
 
-## Recap of the NN implementaion
+## Recap of the NN implementation
 
 The basic model flow is as follows: 
     - Initialize the weights and bias
@@ -134,7 +134,7 @@ The basic model flow is as follows:
         - Update the parameters
     - Stop
 
-Motivations for some of the things we do here. Randomly initialize the weights and biases becasue it works just as good as define some start values. They need to be non-zero for the gradients to work.  Setting the epochs is really just how long you're willing to wait.  Setting the learning rate is a value representing the strength you give to the gradients on changing the weights and bias.  At this point I have not been given a reason we use sigmoid (or any other squishing function) other than "we often like to have values between 0 and 1".  I am assuming this will be elucidated soon enough.  As for the application of the chain rule, I'm confident of at least that.  We apply the chain rule which accumulates the gradients leading back to the first function the weights were used in which is the linear function.  What I am unsure of is *how* .backward does this.  I think my physics brain is getting in the way here.  After we collate the gradients (* the learning rate) we apply them to the parameters by subtracting them from the current parameter values.  This is the weight nudging, or pushing the blanket.  Just as a pragmatic step we then set the gradients to zero as Pytorch will continue collate the gradients ontop of the old ones.  Then we stop the training when we get bored or the loss/accuracy fails to improve (or starts getting worse).
+Motivations for some of the things we do here. Randomly initialize the weights and biases because it works just as good as define some start values. They need to be non-zero for the gradients to work.  Setting the epochs is really just how long you're willing to wait.  Setting the learning rate is a value representing the strength you give to the gradients on changing the weights and bias.  At this point I have not been given a reason we use sigmoid (or any other squishing function) other than "we often like to have values between 0 and 1".  I am assuming this will be elucidated soon enough.  As for the application of the chain rule, I'm confident of at least that.  We apply the chain rule which accumulates the gradients leading back to the first function the weights were used in which is the linear function.  What I am unsure of is *how* .backward does this.  I think my physics brain is getting in the way here.  After we collate the gradients (* the learning rate) we apply them to the parameters by subtracting them from the current parameter values.  This is the weight nudging, or pushing the blanket.  Just as a pragmatic step we then set the gradients to zero as PyTorch will continue collate the gradients on top of the old ones.  Then we stop the training when we get bored or the loss/accuracy fails to improve (or starts getting worse).
 
 And thats really it, we now have a generalized structure for a Linear Classifier.  Some questions I have now are:
     - How can I extend this to include all single digits in the MNIST set?
@@ -143,19 +143,19 @@ And thats really it, we now have a generalized structure for a Linear Classifier
         - Like what if we are classifying between many different digits? (relates to Q1)
 
 
-## Using Pytorch function to simplify the process
+## Using PyTorch function to simplify the process
 
-We can use Pytorch to write an optimizer.  Generalizing the Simple LC class to take any model.
+We can use PyTorch to write an optimizer.  Generalizing the Simple LC class to take any model.
 
-Pytorch linear performs slightly better than our implementation.
+PyTorch linear performs slightly better than our implementation.
 
-My current class is designed for one pass, oka: Linear classifier
+My current class is designed for one pass Linear classifier
 
 Update the class to a two layer neural net
 
-Need to completely chage the class as it is too brittle to extend quickly.
+Need to completely change the class as it is too brittle to extend quickly.
 
-Using the Pytorch functionality we can actually make a NN class.  
+Using the PyTorch functionality we can actually make a NN class.  
 
 ### A basic NN class
 
@@ -179,9 +179,9 @@ Using the Pytorch functionality we can actually make a NN class.
 
 #### Note: on Linear functions
 
-The compositon of two (or more) linear functions can be described by a different single linear function with a new set of parameters that capture the same information.  This is why we use things like ReLU's or *rectified Linear unit*.
+The composition of two (or more) linear functions can be described by a different single linear function with a new set of parameters that capture the same information.  This is why we use things like ReLU's or *rectified Linear unit*.
 
-![ReLU](ReLU.png)
+![ReLU](images/ReLU.png)
 
 ReLU decouples any two linear functions from each other. This allows them to do useful work in their own right.  So in practice you need to put a non-linear function in between any two linear functions.  
 
@@ -235,7 +235,7 @@ Took sometime to figure but I eventually got the Multi-category Cross Entropy fu
 This loss is the combination of two functions: Softmax, and Cross entropy loss. Softmax is described as 
 
 $$\begin{align}
-\text{softmax}(p_{i}) = \frac{e^{p_{i}}}{\sum_{c=1}^{C} e^{p_{c}}}\\ 
+\text{Softmax}(p_{i}) = \frac{e^{p_{i}}}{\sum_{c=1}^{C} e^{p_{c}}}\\ 
 \text{where} \; p = \text{predicted value}, \\
 \text{i} = \text{i-th sample}, \\ 
 \text{c} = \text{label index}, \\
@@ -256,7 +256,7 @@ L_{i} = -\sum_{c=0}^{C}y_{i,c}\log_{}(p_{i,c})\\
 
 
 $$\begin{align}
-\therefore \text{ Multi-Category Model Loss} = \frac{-1}{N}\sum_{i=0}^{N}\sum_{c=0}^{C}y_{i,c}\log_{}(\text{softmax}(p_{i,c})) \\
+\therefore \text{ Multi-Category Model Loss} = \frac{-1}{N}\sum_{i=0}^{N}\sum_{c=0}^{C}y_{i,c}\log_{}(\text{Softmax}(p_{i,c})) \\
 \text{where} \; N = \text{number of samples} \\
 \end{align}$$
 
