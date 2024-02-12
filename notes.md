@@ -119,7 +119,7 @@ Stop
 
 #### Note: on the SimpleNN Class and Python Classes in General
 
-My understanding of Python classes is poor.  My intuition is still based on static methods.  This led me to writing dependent definitions and repeating myself often.  I used GPT to help me form the class and I am getting a better handle on the intuition.  Also used GPT to write a short course on Python classes to help out.  
+My understanding of Python classes is poor.  My intuition is still based on static methods.  This led me to writing dependent definitions and repeating myself often.  I used GPT to help me form the class and I am getting a better handle on the intuition.  A class, at it most basic form, is a state manager.   
 
 
 ## Recap of the NN implementation
