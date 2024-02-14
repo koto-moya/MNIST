@@ -32,6 +32,12 @@ def softmax(preds):
     preds = preds-torch.max(preds)
     return torch.exp(preds)/torch.sum(torch.exp(preds), dim=1).unsqueeze(1)
 
+def cross_entropy_loss_simp(preds, trgt):
+        log_soft = torch.log(softmax(preds))
+        one_hot = log_soft[range(len(log_soft)),trgt.flatten()]
+        loss = -torch.sum(one_hot)
+        return loss
+
 def cross_entropy_loss(preds, trgt):
         soft = softmax(preds)
         one_hot = torch.zeros(trgt.shape[0], soft.shape[1])
@@ -68,13 +74,11 @@ def main():
     epochs = 1000
     lr = 0.0001
     model = SimpleNN(28*28, 30, 10)
-
-    #opt = SGD(model.parameters(), lr)
     previous_length = 0
     for i in range(epochs):
         for x,y in training:
             preds = model(x)
-            loss = cross_entropy_loss(preds, y)
+            loss = cross_entropy_loss_simp(preds, y)
             loss.backward()
             for param in model.parameters():
                 param.data -= lr*param.grad.data
