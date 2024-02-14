@@ -15,37 +15,64 @@ class SimpleNN(nn.Module):
         x = self.ReLU(x)
         x = self.linear2(x)
         return x
-
-def validate_epoch(model, valid_dl):
-        accs = [batch_accuracy(model(x),y) for x,y in valid_dl]
-        return round(torch.stack(accs).mean().item(), 4)
     
-def batch_accuracy(x, y):
-        preds = softmax(x)
+class Trainer():
+    def __init__(self, model, train_data: DataLoader,valid_data: DataLoader, lr: float, epochs):
+        self.model = model
+        self.train_data = train_data
+        self.valid_data = valid_data
+        self.lr = lr
+        self.epochs = epochs
+        self.loss = 0
+        self.prev_len = 0
+    def update_params(self):
+        for param in self.model.parameters():
+            param.data -= self.lr*param.grad.data
+            param.grad = None
+
+    def train(self):
+        for x,y in self.train_data:
+            preds = self.model(x)
+            self.loss = self.cross_entropy_loss(preds, y)
+            self.loss.backward()
+            self.update_params()
+    
+    def train_loop(self):
+        for i in range(self.epochs):
+            self.train()
+            self.display_lss_acc()
+            
+    def softmax(self, preds):
+        preds = preds-torch.max(preds)
+        return torch.exp(preds)/torch.sum(torch.exp(preds), dim=1).unsqueeze(1)
+    
+    def cross_entropy_loss(self, preds, trgt):
+        log_soft = torch.log(self.softmax(preds))
+        one_hot = log_soft[range(len(log_soft)),trgt.flatten()]
+        cel = -torch.sum(one_hot)
+        return cel
+
+    def validate_epoch(self):
+        accs = [self.batch_accuracy(self.model(x),y) for x,y in self.valid_dl]
+        return round(torch.stack(accs).mean().item(), 4)
+        
+    def batch_accuracy(self, x, y):
+        preds = self.softmax(x)
         predicted_value = torch.argmax(preds, dim=1)
         trgts = y.flatten()
         bools = predicted_value == trgts
-        acc = bools.to(torch.float).mean()
-        return acc
+        accs = bools.to(torch.float).mean()
+        return accs
+    
+    def display_lss_acc(self):
+        acc = torch.stack([self.batch_accuracy(self.softmax(self.model(x)), y) for x,y in self.valid_data]).mean()
+        message = f"\rLoss: {self.loss:.4f} | model accuracy: {acc*100:.0f}%"    
+        padding = ' ' * (self.prev_len - len(message))
+        print(message + padding, end='', flush=True)
+        self.prev_len = len(message)
+        time.sleep(.01)
 
-def softmax(preds):
-    preds = preds-torch.max(preds)
-    return torch.exp(preds)/torch.sum(torch.exp(preds), dim=1).unsqueeze(1)
 
-def cross_entropy_loss_simp(preds, trgt):
-        log_soft = torch.log(softmax(preds))
-        one_hot = log_soft[range(len(log_soft)),trgt.flatten()]
-        loss = -torch.sum(one_hot)
-        return loss
-
-def cross_entropy_loss(preds, trgt):
-        soft = softmax(preds)
-        one_hot = torch.zeros(trgt.shape[0], soft.shape[1])
-        for i in range(one_hot.size(0)):
-            index = trgt[i, 0].item()
-            one_hot[i, int(index)] = 1
-        loss = -torch.sum(torch.log(soft)*one_hot)
-        return loss
 
 def stacker(df):
     image_list = [torch.tensor(df.iloc[img].values) for img in range(len(df))]
@@ -66,6 +93,7 @@ def imgs(train, test):
     validation_labels = sum([[i]*len(validation[i]) for i in range(10)],[])
     return loader(testing, testing_labels), loader(validation, validation_labels), loader(training, training_labels)
 
+
 def main():
     train = pd.read_csv("mnist_train.csv")
     test = pd.read_csv("mnist_test.csv")
@@ -74,25 +102,9 @@ def main():
     epochs = 1000
     lr = 0.0001
     model = SimpleNN(28*28, 30, 10)
-    previous_length = 0
-    for i in range(epochs):
-        for x,y in training:
-            preds = model(x)
-            loss = cross_entropy_loss_simp(preds, y)
-            loss.backward()
-            for param in model.parameters():
-                param.data -= lr*param.grad.data
-                param.grad = None
-        if loss < 1.5:
-            break
+    trainer = Trainer(model, training, validation, lr, epochs)
+    trainer.train_loop()
         
-        acc = torch.stack([batch_accuracy(softmax(model(x)), y) for x,y in validation]).mean()
-
-        message = f"\rLoss: {loss:.4f} | model accuracy: {acc*100:.0f}%"    
-        padding = ' ' * (previous_length - len(message))
-        print(message + padding, end='', flush=True)
-        previous_length = len(message)
-        time.sleep(.01)
 
 if __name__ == "__main__":
     main()
