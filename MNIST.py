@@ -25,7 +25,6 @@ class Trainer():
         self.lr = lr
         self.epochs = epochs
         self.loss = 0
-        self.prev_len = 0
         self.loss_hist = []
         self.acc_hist = []
 
@@ -44,9 +43,6 @@ class Trainer():
     def train_loop(self):
         for i in range(self.epochs):
             self.train()
-            if self.loss < 0.9:
-                self.lr = 0.0003
-            #self.display_lss_acc()
             self.acc_hist.append(self.accuracy()*100)
             self.loss_hist.append(self.loss)
             self.plot_losses()
@@ -77,24 +73,27 @@ class Trainer():
         return torch.stack([self.batch_accuracy(self.softmax(self.model(x)), y) for x,y in self.valid_data]).mean()
 
     def plot_losses(self):
-        # Clear previous plots
         plt.clt()
         plt.cld()
-        plt.plot(self.loss_hist,yside="right", label = "Loss")
-        plt.plot(self.acc_hist,yside="left", label="Accuracy")
+
+        plt.theme("pro")
         plt.plot_size(80,40)
-        plt.text(f"LR: {self.lr}", self.epochs*.75, 100)
-        plt.text(f"Accuracy: {self.acc_hist[-1]:.2f}%", self.epochs*.75, 99, color="green")
-        plt.text(f"Loss: {self.loss_hist[-1]:.2f}",self.epochs*.75, 99.5, color="blue")
-        plt.title("Model Vitals")
-        plt.xticks(range(len(self.loss_hist)))
-        plt.ylim(min(self.acc_hist), 100, yside="left")
         plt.ylim(0, self.loss_hist[-1]+10, "right")
+        plt.ylim(min(self.acc_hist), 100, yside="left")
+       
         plt.xlim(0, self.epochs)
+        plt.xticks(range(len(self.loss_hist)))
         plt.xlabel("Epoch")
         plt.ylabel("Accuracy", yside="left")
         plt.ylabel("Loss", yside="right")
-        plt.theme("pro")
+        plt.title("Model Vitals")
+        
+        plt.text(f"LR: {self.lr}", self.epochs*.75, 100, color="red+")
+        plt.text(f"Accuracy: {self.acc_hist[-1]:.2f}%", self.epochs*.75, 99, color="orange+")
+        plt.text(f"Loss: {self.loss_hist[-1]:.2f}",self.epochs*.75, 99.5, color="cyan+")
+        plt.plot(self.loss_hist, yside="right", label = "Loss", color="cyan+")
+        plt.plot(self.acc_hist, yside="left", label="Accuracy", color="orange+")
+        
         plt.sleep(0.001)
         plt.show()
 
