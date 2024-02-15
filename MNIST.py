@@ -1,6 +1,7 @@
 from fastai.vision.all import *
 from fastbook import *
 import pandas as pd
+import plotext as plt
 
 
 class SimpleNN(nn.Module):
@@ -17,7 +18,7 @@ class SimpleNN(nn.Module):
         return x
     
 class Trainer():
-    def __init__(self, model, train_data: DataLoader,valid_data: DataLoader, lr: float, epochs):
+    def __init__(self, model, train_data, valid_data, lr: float, epochs: int):
         self.model = model
         self.train_data = train_data
         self.valid_data = valid_data
@@ -25,6 +26,9 @@ class Trainer():
         self.epochs = epochs
         self.loss = 0
         self.prev_len = 0
+        self.loss_hist = []
+        self.acc_hist = []
+
     def update_params(self):
         for param in self.model.parameters():
             param.data -= self.lr*param.grad.data
@@ -40,7 +44,12 @@ class Trainer():
     def train_loop(self):
         for i in range(self.epochs):
             self.train()
-            self.display_lss_acc()
+            if self.loss < 0.9:
+                self.lr = 0.0003
+            #self.display_lss_acc()
+            self.acc_hist.append(self.accuracy()*100)
+            self.loss_hist.append(self.loss)
+            self.plot_losses()
             
     def softmax(self, preds):
         preds = preds-torch.max(preds)
@@ -64,13 +73,30 @@ class Trainer():
         accs = bools.to(torch.float).mean()
         return accs
     
-    def display_lss_acc(self):
-        acc = torch.stack([self.batch_accuracy(self.softmax(self.model(x)), y) for x,y in self.valid_data]).mean()
-        message = f"\rLoss: {self.loss:.4f} | model accuracy: {acc*100:.0f}%"    
-        padding = ' ' * (self.prev_len - len(message))
-        print(message + padding, end='', flush=True)
-        self.prev_len = len(message)
-        time.sleep(.01)
+    def accuracy(self):
+        return torch.stack([self.batch_accuracy(self.softmax(self.model(x)), y) for x,y in self.valid_data]).mean()
+
+    def plot_losses(self):
+        # Clear previous plots
+        plt.clt()
+        plt.cld()
+        plt.plot(self.loss_hist,yside="right", label = "Loss")
+        plt.plot(self.acc_hist,yside="left", label="Accuracy")
+        plt.plot_size(80,40)
+        plt.text(f"LR: {self.lr}", self.epochs*.75, 100)
+        plt.text(f"Accuracy: {self.acc_hist[-1]:.2f}%", self.epochs*.75, 99, color="green")
+        plt.text(f"Loss: {self.loss_hist[-1]:.2f}",self.epochs*.75, 99.5, color="blue")
+        plt.title("Model Vitals")
+        plt.xticks(range(len(self.loss_hist)))
+        plt.ylim(min(self.acc_hist), 100, yside="left")
+        plt.ylim(0, self.loss_hist[-1]+10, "right")
+        plt.xlim(0, self.epochs)
+        plt.xlabel("Epoch")
+        plt.ylabel("Accuracy", yside="left")
+        plt.ylabel("Loss", yside="right")
+        plt.theme("pro")
+        plt.sleep(0.001)
+        plt.show()
 
 
 
@@ -99,8 +125,8 @@ def main():
     test = pd.read_csv("mnist_test.csv")
     testing, training, validation = imgs(train, test)
 
-    epochs = 1000
-    lr = 0.0001
+    epochs = 100
+    lr = 0.003
     model = SimpleNN(28*28, 30, 10)
     trainer = Trainer(model, training, validation, lr, epochs)
     trainer.train_loop()
