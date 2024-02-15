@@ -39,13 +39,11 @@ class Trainer():
             self.loss = self.cross_entropy_loss(preds, y)
             self.loss.backward()
             self.update_params()
+        self.plot_vitals()
     
     def train_loop(self):
-        for i in range(self.epochs):
+        for _ in range(self.epochs):
             self.train()
-            self.acc_hist.append(self.accuracy()*100)
-            self.loss_hist.append(self.loss)
-            self.plot_losses()
             
     def softmax(self, preds):
         preds = preds-torch.max(preds)
@@ -72,7 +70,11 @@ class Trainer():
     def accuracy(self):
         return torch.stack([self.batch_accuracy(self.softmax(self.model(x)), y) for x,y in self.valid_data]).mean()
 
-    def plot_losses(self):
+    def plot_vitals(self):
+
+        self.acc_hist.append(self.accuracy()*100)
+        self.loss_hist.append(self.loss)
+
         plt.clt()
         plt.cld()
 
