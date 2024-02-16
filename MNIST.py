@@ -18,20 +18,36 @@ class SimpleNN(nn.Module):
         return x
     
 class Trainer():
-    def __init__(self, model, train_data, valid_data, lr: float, epochs: int):
+    def __init__(self, model, train_data, valid_data, lr = 0.003, epochs = 100):
         self.model = model
         self.train_data = train_data
         self.valid_data = valid_data
         self.lr = lr
         self.epochs = epochs
-        self.loss = 0
+        self.loss = torch.tensor([[0]])
         self.loss_hist = []
         self.acc_hist = []
+        self.lr_hist = []
+        self.current_epoch = 0
 
     def update_params(self):
         for param in self.model.parameters():
             param.data -= self.lr*param.grad.data
             param.grad = None
+
+    def lr_finder(self):
+        for i in range(self.epochs):
+            self.current_epoch = i
+            for x,y in self.train_data:
+                preds = self.model(x)
+                self.loss = self.cross_entropy_loss(preds, y)
+                self.loss.backward()
+                self.update_params()
+            self.loss_hist.append(self.loss)
+            self.lr_hist.append(self.lr)
+            self.lr += self.lr
+            self.plot_loss_lr()
+        
 
     def train(self):
         for x,y in self.train_data:
@@ -42,7 +58,8 @@ class Trainer():
         self.plot_vitals()
     
     def train_loop(self):
-        for _ in range(self.epochs):
+        for i in range(self.epochs):
+            self.current_epoch = i
             self.train()
             
     def softmax(self, preds):
@@ -70,11 +87,27 @@ class Trainer():
     def accuracy(self):
         return torch.stack([self.batch_accuracy(self.softmax(self.model(x)), y) for x,y in self.valid_data]).mean()
 
+    def plot_loss_lr(self):
+        plt.clt()
+        plt.cld()
+
+        plt.theme("pro")
+        plt.plot_size(80,40)
+        # lr on the y-axis right, loss on the y-axis left
+        plt.xlabel("Epoch")
+        #plt.xscale("log")
+        #plt.xticks(self.lr_hist)
+        plt.xlim(0, self.epochs)
+        plt.plot(self.loss_hist, label="Loss",yside = "left", color="cyan+")
+        plt.plot(self.lr_hist, label="learning Rate",yside = "right", color="orange+")
+        plt.text(f"LR: {self.lr}", self.epochs*.75, 500, color="red+")
+        plt.sleep(1.)
+        plt.show()
+
     def plot_vitals(self):
 
         self.acc_hist.append(self.accuracy()*100)
         self.loss_hist.append(self.loss)
-
         plt.clt()
         plt.cld()
 
@@ -91,12 +124,12 @@ class Trainer():
         plt.title("Model Vitals")
         
         plt.text(f"LR: {self.lr}", self.epochs*.75, 100, color="red+")
-        plt.text(f"Accuracy: {self.acc_hist[-1]:.2f}%", self.epochs*.75, 99, color="orange+")
+        plt.text(f"Accuracy: {self.acc_hist[-1]:.2f}%", self.epochs*.75, 98, color="orange+")
         plt.text(f"Loss: {self.loss_hist[-1]:.2f}",self.epochs*.75, 99.5, color="cyan+")
         plt.plot(self.loss_hist, yside="right", label = "Loss", color="cyan+")
         plt.plot(self.acc_hist, yside="left", label="Accuracy", color="orange+")
-        
-        plt.sleep(0.001)
+        plt.hline(self.acc_hist[-1], "magenta")
+        plt.sleep(0.0001)
         plt.show()
 
 
@@ -127,9 +160,11 @@ def main():
     testing, training, validation = imgs(train, test)
 
     epochs = 100
-    lr = 0.003
+    # Use for lr_finder: 1e-7, Found with lr finder: 0.0016384, default lr: 0.003
+    lr = 0.0032768  
     model = SimpleNN(28*28, 30, 10)
     trainer = Trainer(model, training, validation, lr, epochs)
+    #trainer.lr_finder()
     trainer.train_loop()
         
 
